@@ -17,8 +17,7 @@ let port = process.env.PORT;
 if (port == null || port == "") {
   port = 3000;
 }
-console.log(process.env.DB_URI);
-console.log(process.env.DB_EncryptKey);
+
 
 // ---------------------------------------------------------------------------------------
 // MongoDB code, i.e connect to db, create new schema and model (for collection) from that schema
