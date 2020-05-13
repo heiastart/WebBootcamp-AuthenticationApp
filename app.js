@@ -67,7 +67,7 @@ app.post("/register", (req, res) => {
   const newUser = new User({
     // Must fetch the data from the email and password fields, using their name attribute
     // Then we store the hash of the data in the database
-    email: md5(req.body.username),
+    email: req.body.username,
     password: md5(req.body.password)
   });
 
@@ -87,7 +87,7 @@ app.post("/register", (req, res) => {
 
 app.post("/login", (req, res) => { 
   const username = req.body.username;
-  const password = req.body.password;
+  const password = md5(req.body.password);
 
   // Here, we're basically checking if the user already exists in the database
   User.findOne({email: username}, (err, foundUser) => {
@@ -97,6 +97,7 @@ app.post("/login", (req, res) => {
     else {
       if (foundUser) {
         // Now checking if the password matches the password in the database, since we know that the user exists
+        // Comparing the HASH of the password
         if (foundUser.password === password) {
           // Finally, we can serve the user the secrets-page since he has typed the correct password
           res.render("secrets");
