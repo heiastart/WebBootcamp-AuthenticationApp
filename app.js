@@ -88,7 +88,7 @@ app.post("/register", (req, res) => {
           // We're only rendering the secrets page if the user excists!!
           // res.status(200).send("User saved successfully!"); -> did not work
           res.render("secrets");
-          console.log("User saved successfully!");
+          console.log("User saved successfully, using bcrypt hashing!");
         } 
       });  
     }
@@ -97,7 +97,7 @@ app.post("/register", (req, res) => {
 
 app.post("/login", (req, res) => { 
   const username = req.body.username;
-  const password = md5(req.body.password);
+  const password = req.body.password;
 
   // Here, we're basically checking if the user already exists in the database
   User.findOne({email: username}, (err, foundUser) => {
@@ -106,13 +106,16 @@ app.post("/login", (req, res) => {
     } 
     else {
       if (foundUser) {
-        // Now checking if the password matches the password in the database, since we know that the user exists
-        // Comparing the HASH of the password
-        if (foundUser.password === password) {
-          // Finally, we can serve the user the secrets-page since he has typed the correct password
-          res.render("secrets");
-          console.log("User logged in successfully!");
-        }
+        // Using bcrypt to check the given password's hash against the hash in the database
+        // First parameter is the user's password that he types in, second parameter is the stored db-hash from foundUser that is returned
+        // from the findOne() query!
+        bcrypt.compare(password, foundUser.password, function(err, result) {
+          if (result === true) {
+            // Finally, we can serve the user the secrets-page since he has typed the correct password
+            res.render("secrets");
+            console.log("User logged in successfully, using bcrypt hashing!");
+          }
+        });
       }  
     }
   });
