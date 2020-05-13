@@ -4,7 +4,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
-const encrypt = require("mongoose-encryption");
+// const encrypt = require("mongoose-encryption"); - using md5 hashing instead
+const md5 = require("md5");
 // const _ = require("lodash");
 
 const app = express();
@@ -34,7 +35,7 @@ const userSchema = new mongoose.Schema({
 // Using the "Secret string instead of two keys" way from https://www.npmjs.com/package/mongoose-encryption
 // Also, we only want to encrypt the password, which we must specify
 const secret = process.env.DB_EncryptKey;
-userSchema.plugin(encrypt, {secret: secret, encryptedFields: ['password']});
+// userSchema.plugin(encrypt, {secret: secret, encryptedFields: ['password']});
 
 const User = new mongoose.model("User", userSchema);
 
@@ -65,8 +66,9 @@ app.post("/register", (req, res) => {
   // Creating an object of the model to store the new user as a document in the database
   const newUser = new User({
     // Must fetch the data from the email and password fields, using their name attribute
-    email: req.body.username,
-    password: req.body.password
+    // Then we store the hash of the data in the database
+    email: md5(req.body.username),
+    password: md5(req.body.password)
   });
 
   newUser.save((err) => {
