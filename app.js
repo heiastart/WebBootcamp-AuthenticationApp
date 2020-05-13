@@ -5,7 +5,9 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
 // const encrypt = require("mongoose-encryption"); - using md5 hashing instead
-const md5 = require("md5");
+// const md5 = require("md5"); -> using bcrypt instead
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 // const _ = require("lodash");
 
 const app = express();
@@ -63,25 +65,33 @@ app.get("/register", (req, res) => {
 // POST-request code to the different routes
 // ----------------------------------------------------------------
 app.post("/register", (req, res) => {
-  // Creating an object of the model to store the new user as a document in the database
-  const newUser = new User({
-    // Must fetch the data from the email and password fields, using their name attribute
-    // Then we store the hash of the data in the database
-    email: req.body.username,
-    password: md5(req.body.password)
-  });
-
-  newUser.save((err) => {
-    if (err){
+  // Using bcrypt to generate a random salt and then use it (with the user's password) to calculate the final hash
+  bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+    if (err) {
       console.log(err);
-    }
-    else{
-      // If no error, send OK message
-      // We're only rendering the secrets page if the user excists!!
-      // res.status(200).send("User saved successfully!"); -> did not work
-      res.render("secrets");
-      console.log("User saved successfully!");
     } 
+    else {
+      // Creating an object of the model to store the new user as a document in the database
+      const newUser = new User({
+      // Must fetch the data from the email and password fields, using their name attribute
+      // Then we store the hash of the data in the database
+      email: req.body.username,
+      password: hash
+      });
+
+      newUser.save((err) => {
+        if (err){
+          console.log(err);
+        }
+        else{
+          // If no error, send OK message
+          // We're only rendering the secrets page if the user excists!!
+          // res.status(200).send("User saved successfully!"); -> did not work
+          res.render("secrets");
+          console.log("User saved successfully!");
+        } 
+      });  
+    }
   });
 })
 
