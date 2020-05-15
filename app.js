@@ -56,15 +56,20 @@ const userSchema = new mongoose.Schema({
   password: String
 });
 
+// This line is for the final passport version of the app :)
 userSchema.plugin(passportLocalMongoose);
 
+// ALL the out-commented code below is for the encrypt/hashing part
 // Using the "Secret string instead of two keys" way from https://www.npmjs.com/package/mongoose-encryption
 // Also, we only want to encrypt the password, which we must specify
-const secret = process.env.DB_EncryptKey;
+// const secret = process.env.DB_EncryptKey;
 // userSchema.plugin(encrypt, {secret: secret, encryptedFields: ['password']});
 
 const User = new mongoose.model("User", userSchema);
-
+// Then we need to set up the Passport-Local Configuration, which basically enables Mongoose to access the cookie and fetch the information
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 
 // ---------------------------------------------------------------------------------------
