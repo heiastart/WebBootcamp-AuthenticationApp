@@ -4,10 +4,14 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
+const session = require("express-session");
+const passport = require("passport");
+const passportLocalMongoose = require("passport-local-mongoose");
+
 // const encrypt = require("mongoose-encryption"); - using md5 hashing instead
 // const md5 = require("md5"); -> using bcrypt instead
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
+// const bcrypt = require("bcrypt"); -> using passport instead
+// const saltRounds = 10;
 // const _ = require("lodash");
 
 const app = express();
@@ -23,6 +27,24 @@ if (port == null || port == "") {
 
 
 // ---------------------------------------------------------------------------------------
+// MIDDLEWARE (code before going to the route) for creating sessions for the client
+// Using app.use() for this...
+// NB: the middleware MUST be added BEFORE the db-code and the code for the different routes!!!!
+// ---------------------------------------------------------------------------------------
+// Initializing the session:
+app.use(session({ 
+  secret: 'Our little secret.',
+  resave: false,
+  saveUninitialized: false
+  }
+));
+
+// Initializing passport:
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+// ---------------------------------------------------------------------------------------
 // MongoDB code, i.e connect to db, create new schema and model (for collection) from that schema
 // mongoose.connect(), const <name>Schema = new mongoose.Schema{}, const Post = mongoose.model();
 // ---------------------------------------------------------------------------------------
@@ -33,6 +55,8 @@ const userSchema = new mongoose.Schema({
   email: String,
   password: String
 });
+
+userSchema.plugin(passportLocalMongoose);
 
 // Using the "Secret string instead of two keys" way from https://www.npmjs.com/package/mongoose-encryption
 // Also, we only want to encrypt the password, which we must specify
@@ -63,62 +87,14 @@ app.get("/register", (req, res) => {
 
 // ----------------------------------------------------------------
 // POST-request code to the different routes
+// Last step was to use passport package, therefore all previous code for the POST-requests was deleted
 // ----------------------------------------------------------------
 app.post("/register", (req, res) => {
-  // Using bcrypt to generate a random salt and then use it (with the user's password) to calculate the final hash
-  bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
-    if (err) {
-      console.log(err);
-    } 
-    else {
-      // Creating an object of the model to store the new user as a document in the database
-      const newUser = new User({
-      // Must fetch the data from the email and password fields, using their name attribute
-      // Then we store the hash of the data in the database
-      email: req.body.username,
-      password: hash
-      });
-
-      newUser.save((err) => {
-        if (err){
-          console.log(err);
-        }
-        else{
-          // If no error, send OK message
-          // We're only rendering the secrets page if the user excists!!
-          // res.status(200).send("User saved successfully!"); -> did not work
-          res.render("secrets");
-          console.log("User saved successfully, using bcrypt hashing!");
-        } 
-      });  
-    }
-  });
+  
 })
 
 app.post("/login", (req, res) => { 
-  const username = req.body.username;
-  const password = req.body.password;
-
-  // Here, we're basically checking if the user already exists in the database
-  User.findOne({email: username}, (err, foundUser) => {
-    if (err) {
-      console.log(err);
-    } 
-    else {
-      if (foundUser) {
-        // Using bcrypt to check the given password's hash against the hash in the database
-        // First parameter is the user's password that he types in, second parameter is the stored db-hash from foundUser that is returned
-        // from the findOne() query!
-        bcrypt.compare(password, foundUser.password, function(err, result) {
-          if (result === true) {
-            // Finally, we can serve the user the secrets-page since he has typed the correct password
-            res.render("secrets");
-            console.log("User logged in successfully, using bcrypt hashing!");
-          }
-        });
-      }  
-    }
-  });
+  
 })
 
 
