@@ -50,6 +50,7 @@ app.use(passport.session());
 // ---------------------------------------------------------------------------------------
 const dbURI = process.env.DB_URI;
 mongoose.connect(dbURI, {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.set('useCreateIndex', true);
 
 const userSchema = new mongoose.Schema({
   email: String,
