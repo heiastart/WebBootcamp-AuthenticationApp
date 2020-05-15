@@ -89,6 +89,15 @@ app.get("/register", (req, res) => {
   res.render("register");
 })
 
+app.get("/secrets", (req, res) => {
+  // Here we are checking whether the user is authenticated
+  if (req.isAuthenticated()) {
+    res.render('/secrets');
+  }
+  else {
+    res.redirect('/login');
+  }
+})
 
 
 // ----------------------------------------------------------------
@@ -96,8 +105,22 @@ app.get("/register", (req, res) => {
 // Last step was to use passport package, therefore all previous code for the POST-requests was deleted
 // ----------------------------------------------------------------
 app.post("/register", (req, res) => {
-  
+  // This method comes from the passport-local-mongoose package
+  User.register({username: req.body.username}, req.body.password, (err, regUser) => {
+    if (err) {
+      console.log(err);
+      res.redirect('/register');
+    }
+    else {
+      // No errors, thus we're gonna authenticate the user using passport
+      // local is the type of authentication
+      passport.authenticate("local")(req, res, function (){
+        res.redirect('/secrets');
+      });
+    }
+  });
 })
+
 
 app.post("/login", (req, res) => { 
   
