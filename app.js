@@ -92,7 +92,7 @@ app.get("/register", (req, res) => {
 app.get("/secrets", (req, res) => {
   // Here we are checking whether the user is authenticated
   if (req.isAuthenticated()) {
-    res.render('/secrets');
+    res.render('secrets');
   }
   else {
     res.redirect('/login');
