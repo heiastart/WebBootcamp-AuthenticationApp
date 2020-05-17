@@ -32,8 +32,9 @@ if (port == null || port == "") {
 // NB: the middleware MUST be added BEFORE the db-code and the code for the different routes!!!!
 // ---------------------------------------------------------------------------------------
 // Initializing the session:
+const secret = process.env.DB_EncryptKey;
 app.use(session({ 
-  secret: 'Our little secret.',
+  secret: secret,
   resave: false,
   saveUninitialized: false
   }
