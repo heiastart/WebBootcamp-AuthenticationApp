@@ -124,6 +124,23 @@ app.post("/register", (req, res) => {
 
 app.post("/login", (req, res) => { 
   
+  const user = new User({
+    username: req.body.username,
+    password: req.body.password
+  });
+
+  // We then use passport to login this user and authenticate him/her using a built-in login() method on the req object
+  req.login(user, (err) => {
+    if (err) {
+      console.log(err);
+    } 
+    else {
+      // We can now authenticate the user, using passport, since he was able to log in
+      passport.authenticate("local")(req, res, function (){
+        res.redirect('/secrets');
+      });
+    }
+  })
 })
 
 
