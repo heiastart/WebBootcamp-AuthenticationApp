@@ -85,6 +85,12 @@ app.get("/login", (req, res) => {
   res.render("login");
 })
 
+app.get("/logout", (req, res) => {
+  // Here, we "de-authenticate" the user (i.e ending the session) before sending him back to the home page
+  req.logout();
+  res.redirect("/");
+})
+
 app.get("/register", (req, res) => {
   res.render("register");
 })
