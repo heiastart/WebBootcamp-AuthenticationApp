@@ -55,7 +55,8 @@ mongoose.set('useCreateIndex', true);
 
 const userSchema = new mongoose.Schema({
   email: String,
-  password: String
+  password: String,
+  secret: String
 });
 
 // This line is for the final passport version of the app :)
@@ -96,14 +97,29 @@ app.get("/register", (req, res) => {
   res.render("register");
 })
 
-app.get("/secrets", (req, res) => {
-  // Here we are checking whether the user is authenticated
+app.get("/submit", (req, res) => {
+  // First we check if the user is logged in/authenticated
   if (req.isAuthenticated()) {
-    res.render('secrets');
+    res.render('submit');
   }
   else {
     res.redirect('/login');
   }
+})
+
+app.get("/secrets", (req, res) => {
+  // For the final part of the this app, we want everybody to be able to see everybodys posted secrets...
+  // Therefore, no need to check for authentication
+  User.find({"secret": {$ne:null}}, (err, foundUsers) => {
+      if (err){
+        console.log(err);
+      }
+      else {
+        if (foundUsers){
+          res.render("secrets", {usersWithSecrets: foundUsers});
+        }
+      }
+   })
 })
 
 
@@ -129,8 +145,7 @@ app.post("/register", (req, res) => {
 })
 
 
-app.post("/login", (req, res) => { 
-  
+app.post("/login", (req, res) => {  
   const user = new User({
     username: req.body.username,
     password: req.body.password
@@ -150,7 +165,27 @@ app.post("/login", (req, res) => {
   })
 })
 
+app.post("/submit", (req, res) => {
+  const submittedSecret = req.body.secret;
 
+  // We then must find which user is logged in and save the new secret to his/her user account...and passport has a method for this
+  console.log(req.user.id);
+
+  User.findById(req.user.id, (err, foundUser) => {
+    if (err) {
+      console.log(err);
+    } 
+    else {
+      if (foundUser) {
+        // Add the submitted secret to the foundUser account (i.e the secret field in the db schema)
+        foundUser.secret = submittedSecret;
+        foundUser.save(() => {
+          res.redirect("/secrets");
+        });
+      }
+    }
+  })
+})
 
 
 app.listen(port, function () {
